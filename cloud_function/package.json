@@ -1,0 +1,16 @@
+{
+  "name": "cloud_function",
+  "version": "1.0.0",
+  "description": "A script to insert Particle events into a Google Cloud Platform Datastore database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Prabhav Chawla",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "@google-cloud/datastore": "^1.4.2",
+    "util": "^0.12.1"
+  }
+}
