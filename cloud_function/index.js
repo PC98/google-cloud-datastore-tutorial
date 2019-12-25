@@ -1,16 +1,17 @@
 let colors = require("colors");
 let util = require("util");
-let Datastore = require("@google-cloud/datastore");
+let Firestore = require("@google-cloud/firestore");
+let Timestamp = require("firebase-admin").firestore.Timestamp;
 
-const datastore = Datastore();
+const datastore = new Firestore();
 
-function _createParticleEventObjectForStorage(event, log) {
+function _createParticleEventObjectForStorage({ id, attributes, data }, log) {
   let obj = {
-    gc_pub_sub_id: event.id,
-    device_id: event.attributes.device_id,
-    event: event.attributes.event,
-    data: event.data,
-    published_at: event.attributes.published_at
+    gc_pub_sub_id: id,
+    device_id: attributes.device_id,
+    event: attributes.event,
+    data: JSON.parse(Buffer.from(data, "base64").toString()),
+    published_at: Timestamp.fromDate(new Date(attributes.published_at))
   };
 
   if (log) {
@@ -21,16 +22,13 @@ function _createParticleEventObjectForStorage(event, log) {
 }
 
 function storeEvent(event) {
-  let key = datastore.key("ParticleEvent");
+  const dbRef = datastore.collection("ParticleEvent");
 
-  datastore
-    .save({
-      key: key,
-      data: _createParticleEventObjectForStorage(event)
-    })
+  dbRef
+    .add(_createParticleEventObjectForStorage(event))
     .then(() => {
       console.log(
-        colors.green("Particle event stored in Datastore!\r\n"),
+        colors.green("Particle event stored in Firestore!\r\n"),
         _createParticleEventObjectForStorage(event, true)
       );
     })
