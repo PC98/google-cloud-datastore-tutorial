@@ -5,31 +5,33 @@ let Timestamp = require("firebase-admin").firestore.Timestamp;
 
 const datastore = new Firestore();
 
-function _createParticleEventObjectForStorage({ id, attributes, data }, log) {
-  let obj = {
-    gc_pub_sub_id: id,
-    device_id: attributes.device_id,
-    event: attributes.event,
-    data: JSON.parse(Buffer.from(data, "base64").toString()),
-    published_at: Timestamp.fromDate(new Date(attributes.published_at))
-  };
-
-  if (log) {
-    return colors.grey(util.inspect(obj));
-  } else {
-    return obj;
+function _createParticleEventObjectForStorage({ id, attributes, data }) {
+  let decodedData = Buffer.from(data, "base64").toString();
+  try {
+    decodedData = JSON.parse(decodedData);
+  } catch (_) {
+  } finally {
+    return {
+      gc_pub_sub_id: id,
+      device_id: attributes.device_id,
+      event: attributes.event,
+      data: decodedData,
+      published_at: Timestamp.fromDate(new Date(attributes.published_at))
+    };
   }
 }
 
 function storeEvent(event) {
   const dbRef = datastore.collection("ParticleEvent");
 
+  const obj = _createParticleEventObjectForStorage(event);
+
   dbRef
-    .add(_createParticleEventObjectForStorage(event))
+    .add(obj)
     .then(() => {
       console.log(
         colors.green("Particle event stored in Firestore!\r\n"),
-        _createParticleEventObjectForStorage(event, true)
+        colors.grey(util.inspect(obj))
       );
     })
     .catch(err => {
